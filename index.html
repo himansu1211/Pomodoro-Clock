@@ -1,23 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomodoro Clock</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pomodoro Clock</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>Pomodoro Clock</h1>
-        <div id="timer">25:00</div>
-        <div id="session">Work</div>
-        <div class="buttons">
-            <button id="start">Start</button>
-            <button id="pause">Pause</button>
-            <button id="reset">Reset</button>
-        </div>
-        <div id="pomodoro-count">Pomodoros: 0</div>
-    </div>
-    <script src="script.js"></script>
+  <h1>Pomodoro Clock</h1>
+  <div id="timer">25:00</div>
+  <div class="controls">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="pauseResumeTimer()" id="pauseBtn">Pause</button>
+    <button onclick="stopTimer()">Stop</button>
+  </div>
+  <div>
+    <label>Break Time (min): <input type="number" id="breakInput" value="5"/></label>
+    <button onclick="setBreakTime()">Set Break</button>
+  </div>
+  <div>
+    <h3>Notes</h3>
+    <textarea id="notes" placeholder="Write your notes here..."></textarea>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
