@@ -1,28 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pomodoro Clock</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Clock</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
-  <h1>Pomodoro Clock</h1>
-  <div id="timer">25:00</div>
-  <div class="controls">
-    <button onclick="startTimer()">Start</button>
-    <button onclick="pauseResumeTimer()" id="pauseBtn">Pause</button>
-    <button onclick="stopTimer()">Stop</button>
-  </div>
-  <div>
-    <label>Break Time (min): <input type="number" id="breakInput" value="5"/></label>
-    <button onclick="setBreakTime()">Set Break</button>
-  </div>
-  <div>
-    <h3>Notes</h3>
-    <textarea id="notes" placeholder="Write your notes here..."></textarea>
-  </div>
+<body data-theme="dark">
+    <div class="container">
+        <h1>Pomodoro Timer</h1>
 
-  <script src="script.js"></script>
+        <div class="mode-selector">
+            <button id="pomodoro-btn" class="active">Pomodoro</button>
+            <button id="break-btn">Break</button>
+        </div>
+
+        <div class="timer-display" id="timer-display">25:00</div>
+
+        <div class="settings-container">
+            <h2>Set Durations (Minutes)</h2>
+            <div class="duration-inputs">
+                <label for="pomodoro-duration">Pomodoro:</label>
+                <input type="number" id="pomodoro-duration" value="25" min="1">
+            </div>
+            <div class="duration-inputs">
+                <label for="break-duration">Break:</label>
+                <input type="number" id="break-duration" value="5" min="1">
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="start-pause-resume-btn" class="control-btn">Start</button>
+            <button id="stop-btn" class="control-btn">Stop</button>
+        </div>
+        
+        <button id="theme-toggle" class="theme-toggle">
+            <i class="fas fa-sun"></i> Light
+        </button>
+    </div>
+
+    <audio id="alarm-sound" src="alarm.mp3" preload="auto"></audio>
+    
+    <script src="script.js"></script>
 </body>
 </html>
