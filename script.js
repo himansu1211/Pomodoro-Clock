@@ -1,371 +1,328 @@
-// --- Pomodoro Timer Script ---
+document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. CONFIGURATION AND STATE ---
+    const TIME_MODES = {
+        'pomodoro': 25 * 60,
+        'short-break': 5 * 60,
+        'long-break': 15 * 60
+    };
 
-// Import Tone.js library
-// Assuming Tone.js is included in the HTML via a <script> tag
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    let currentMode = 'pomodoro';
+    let timeLeft = TIME_MODES[currentMode];
+    let totalTime = timeLeft;
+    let isRunning = false;
+    let timerInterval = null;
+    let soundEnabled = true;
+    let alarmTime = null;
+    let alarmInterval = null;
 
-// --- Timer Configuration (in seconds) ---
-const POMODORO_DURATION = 25 * 60;
-const SHORT_BREAK_DURATION = 5 * 60;
-const LONG_BREAK_DURATION = 15 * 60;
-const DEFAULT_COLOR_RGB = '79, 70, 229'; 
+    // Initialize Tone.js Synth for simple sound alerts
+    const synth = new Tone.Synth().toDestination();
+    const bellSynth = new Tone.MembraneSynth().toDestination();
+    const chimeSynth = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' } }).toDestination();
+    const melodySynth = new Tone.AMSynth().toDestination();
 
-let totalSeconds = POMODORO_DURATION;
-let secondsRemaining = totalSeconds;
-let timerInterval = null;
-let isRunning = false;
-let currentMode = 'pomodoro';
-let isDayMode = false;
-let soundEnabled = true;
+    // --- 2. DOM ELEMENTS ---
+    const timerDisplay = document.getElementById('timer-display');
+    const startPauseBtn = document.getElementById('start-pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const statusMessage = document.getElementById('status-message');
+    const progressFill = document.getElementById('progress-fill');
+    const modeBtns = document.querySelectorAll('.mode-btn');
 
-const timerDisplay = document.getElementById('timer-display');
-const startPauseBtn = document.getElementById('start-pause-btn');
-const resetBtn = document.getElementById('reset-btn');
-const statusMessage = document.getElementById('status-message');
-const progressFill = document.getElementById('progress-fill');
-const modeButtons = {
-    pomodoro: document.getElementById('pomodoro-btn'),
-    shortBreak: document.getElementById('short-break-btn'),
-    longBreak: document.getElementById('long-break-btn')
-};
-const themeToggle = document.getElementById('theme-toggle');
-const moonIcon = document.getElementById('moon-icon');
-const sunIcon = document.getElementById('sun-icon');
-const colorPicker = document.getElementById('color-picker');
-const bgColorPicker = document.getElementById('bg-color-picker');
-const soundToggle = document.getElementById('sound-toggle');
+    const themeToggle = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('moon-icon');
+    const sunIcon = document.getElementById('sun-icon');
+    const soundToggle = document.getElementById('sound-toggle');
+    const colorPicker = document.getElementById('color-picker');
+    const bgColorPicker = document.getElementById('bg-color-picker');
 
-// --- Audio Setup (Tone.js) ---
-// Create synths for different ringtones
-const synth = new Tone.Synth().toDestination();
-const chimeSynth = new Tone.MetalSynth().toDestination();
-const bellSynth = new Tone.FMSynth().toDestination();
-const melodySynth = new Tone.PolySynth().toDestination();
+    const worldTimeDisplay = document.getElementById('world-time');
+    const timezoneSelect = document.getElementById('timezone-select');
+    const alarmTimeInput = document.getElementById('alarm-time');
+    const setAlarmBtn = document.getElementById('set-alarm-btn');
+    const alarmStatus = document.getElementById('alarm-status');
+    const ringtoneSelect = document.getElementById('ringtone-select');
 
-const playRingtone = (ringtone) => {
-    if (!soundEnabled) return;
-    // Check if audio context is running (required for some browsers)
-    if (Tone.context.state !== 'running') {
+    // --- 3. TIMER FUNCTIONS ---
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes < 10 ? '0' : ''}${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    }
+
+    function updateDisplay() {
+        timerDisplay.textContent = formatTime(timeLeft);
+
+        // Update progress bar
+        const progress = ((totalTime - timeLeft) / totalTime) * 100;
+        progressFill.style.width = `${100 - progress}%`;
+    }
+
+    function startTimer() {
+        if (isRunning) return;
+
+        // Ensure Tone is started on user interaction
         Tone.start();
-    }
-    switch (ringtone) {
-        case 'beep':
-            // Play a simple beep sequence
-            synth.triggerAttackRelease('C4', '8n');
-            setTimeout(() => synth.triggerAttackRelease('C4', '8n'), 200);
-            setTimeout(() => synth.triggerAttackRelease('C4', '8n'), 400);
-            break;
-        case 'chime':
-            chimeSynth.triggerAttackRelease('C5', '4n');
-            setTimeout(() => chimeSynth.triggerAttackRelease('E5', '4n'), 250);
-            setTimeout(() => chimeSynth.triggerAttackRelease('G5', '4n'), 500);
-            break;
-        case 'bell':
-            bellSynth.triggerAttackRelease('C4', '2n');
-            break;
-        case 'melody':
-            melodySynth.triggerAttackRelease(['C4', 'E4', 'G4'], '4n');
-            setTimeout(() => melodySynth.triggerAttackRelease(['D4', 'F#4', 'A4'], '4n'), 250);
-            setTimeout(() => melodySynth.triggerAttackRelease(['E4', 'G#4', 'B4'], '4n'), 500);
-            break;
-    }
-};
 
-const alarmSound = () => playRingtone('beep'); // Default for timer
+        isRunning = true;
+        startPauseBtn.textContent = 'Pause';
+        statusMessage.classList.remove('opacity-100');
+        statusMessage.classList.add('opacity-0');
 
-function updateDisplay() {
-    const minutes = Math.floor(secondsRemaining / 60);
-    const seconds = secondsRemaining % 60;
-    const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    timerDisplay.textContent = formattedTime;
-    document.title = `${formattedTime} | Pomodoro`;
-
-    const progress = ((totalSeconds - secondsRemaining) / totalSeconds) * 100;
-    progressFill.style.width = `${progress}%`;
-}
-
-function startTimer() {
-    if (isRunning) return;
-
-    isRunning = true;
-    startPauseBtn.textContent = 'Pause';
-    statusMessage.classList.remove('opacity-100');
-    statusMessage.classList.add('opacity-0');
-
-    timerInterval = setInterval(() => {
-        secondsRemaining--;
-        updateDisplay();
-
-        if (secondsRemaining <= 0) {
-            clearInterval(timerInterval);
-            isRunning = false;
-            handleTimerEnd();
-        }
-    }, 1000);
-}
-
-function pauseTimer() {
-    clearInterval(timerInterval);
-    isRunning = false;
-    startPauseBtn.textContent = 'Start';
-}
-
-function handleTimerEnd() {
-    startPauseBtn.textContent = 'Start';
-    alarmSound();
-
-    if (currentMode === 'pomodoro') {
-        statusMessage.textContent = "Time's Up! Take a break.";
-        statusMessage.style.color = `rgb(${DEFAULT_COLOR_RGB})`;
-    } else {
-        statusMessage.textContent = "Break Over! Back to work.";
-        statusMessage.style.color = 'red';
-    }
-    statusMessage.classList.remove('opacity-0');
-    statusMessage.classList.add('opacity-100');
-
-    if (currentMode === 'pomodoro') {
-        setMode('shortBreak');
-    } else {
-        setMode('pomodoro');
-    }
-}
-
-function resetTimer() {
-    pauseTimer();
-    setMode(currentMode, true); 
-
-    statusMessage.classList.remove('opacity-100');
-    statusMessage.classList.add('opacity-0');
-}
-/**
- * Sets the timer mode and updates the display.
- *                                                                                                      
-   @param {string} mode - 'pomodoro', 'shortBreak', or 'longBreak'
- * @param {boolean} [keepRunningState=false] - If true, only reset time, not the selected button state.
- */
-function setMode(mode, keepRunningState = false) {
-    pauseTimer();
-
-    // Determine new duration
-    let duration;
-    if (mode === 'pomodoro') {
-        duration = POMODORO_DURATION;
-    } else if (mode === 'shortBreak') {
-        duration = SHORT_BREAK_DURATION;
-    } else if (mode === 'longBreak') {
-        duration = LONG_BREAK_DURATION;
-    } else {
-        return; // Invalid mode
+        timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateDisplay();
+            } else {
+                clearInterval(timerInterval);
+                handleTimerEnd();
+            }
+        }, 1000);
     }
 
-    totalSeconds = duration;
-    secondsRemaining = duration;
-    currentMode = mode;
+    function pauseTimer() {
+        if (!isRunning) return;
 
-    updateDisplay();
-
-    // Update mode buttons' active state
-    if (!keepRunningState) {
-        Object.values(modeButtons).forEach(btn => btn.classList.remove('active'));
-        modeButtons[mode].classList.add('active');
+        isRunning = false;
+        clearInterval(timerInterval);
+        startPauseBtn.textContent = 'Start';
     }
-}
 
-/**
- * Toggles between Day (light) and Night (dark) themes.
- */
-function toggleTheme() {
-    isDayMode = !isDayMode;
-    document.body.classList.toggle('day-mode', isDayMode);
-
-    // Update icons visibility
-    moonIcon.classList.toggle('hidden', isDayMode);
-    sunIcon.classList.toggle('hidden', !isDayMode);
-}
-
-/**
- * Updates the primary accent color globally.
- * @param {string} hex - New color in hexadecimal format.
- */
-function updatePrimaryColor(hex) {
-    // Convert Hex to RGB format (e.g., "79 70 229")
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const rgbString = `${r} ${g} ${b}`;
-
-    document.documentElement.style.setProperty('--primary-color', rgbString);
-}
-
-/**
- * Updates the custom background color.
- * @param {string} hex - New background color in hexadecimal format.
- */
-function updateBackgroundColor(hex) {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const rgbString = `${r} ${g} ${b}`;
-
-    document.documentElement.style.setProperty('--bg-main', rgbString);
-    document.documentElement.style.setProperty('--custom-bg', rgbString);
-}
-
-/**
- * Toggles sound on/off.
- */
-function toggleSound() {
-    soundEnabled = !soundEnabled;
-    const icon = soundToggle.querySelector('svg');
-    if (soundEnabled) {
-        icon.classList.remove('text-red-400');
-        icon.classList.add('text-green-400');
-    } else {
-        icon.classList.remove('text-green-400');
-        icon.classList.add('text-red-400');
-    }
-}
-
-// --- Event Listeners ---
-
-// Start/Pause Button
-startPauseBtn.addEventListener('click', () => {
-    if (isRunning) {
+    function resetTimer() {
         pauseTimer();
-    } else {
-        startTimer();
+        timeLeft = TIME_MODES[currentMode];
+        totalTime = timeLeft;
+        updateDisplay();
+        statusMessage.classList.remove('opacity-100');
+        statusMessage.classList.add('opacity-0');
     }
-});
 
-// Reset Button
-resetBtn.addEventListener('click', resetTimer);
+    function handleTimerEnd() {
+        isRunning = false;
+        startPauseBtn.textContent = 'Start';
+        statusMessage.textContent = "Time's Up! Take a break.";
+        statusMessage.classList.remove('opacity-0');
+        statusMessage.classList.add('opacity-100');
+        
+        playRingtone('bell'); // Default sound for Pomodoro end
 
-// Mode Buttons
-modeButtons.pomodoro.addEventListener('click', () => setMode('pomodoro'));
-modeButtons.shortBreak.addEventListener('click', () => setMode('shortBreak'));
-modeButtons.longBreak.addEventListener('click', () => setMode('longBreak'));
+        // Auto-switch modes (optional feature)
+        // const nextMode = currentMode === 'pomodoro' ? 'short-break' : 'pomodoro';
+        // switchMode(nextMode);
+    }
 
-// Theme Toggle
-themeToggle.addEventListener('click', toggleTheme);
+    function switchMode(newMode) {
+        if (currentMode === newMode) return;
+        
+        pauseTimer();
+        currentMode = newMode;
+        timeLeft = TIME_MODES[newMode];
+        totalTime = timeLeft;
+        updateDisplay();
+        statusMessage.classList.remove('opacity-100');
+        statusMessage.classList.add('opacity-0');
 
-// Color Picker
-colorPicker.addEventListener('input', (event) => {
-    updatePrimaryColor(event.target.value);
-});
+        // Update active button
+        modeBtns.forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`${newMode}-btn`).classList.add('active');
+    }
 
-// Background Color Picker
-bgColorPicker.addEventListener('input', (event) => {
-    updateBackgroundColor(event.target.value);
-});
+    // --- 4. THEME & COLOR FUNCTIONS ---
 
-// Sound Toggle
-soundToggle.addEventListener('click', toggleSound);
+    function hexToRgb(hex) {
+        const bigint = parseInt(hex.slice(1), 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `${r} ${g} ${b}`;
+    }
 
-// --- World Clock and Alarm Variables ---
-let selectedTimezone = 'America/New_York';
-let alarmTime = null;
-let alarmRingtone = 'beep';
-let alarmInterval = null;
+    function updatePrimaryColor(hex) {
+        const root = document.documentElement;
+        const rgb = hexToRgb(hex);
+        root.style.setProperty('--primary-color', rgb);
+    }
 
-// --- DOM Elements for World Clock and Alarm ---
-const timezoneSelect = document.getElementById('timezone-select');
-const worldTimeDisplay = document.getElementById('world-time');
-const alarmTimeInput = document.getElementById('alarm-time');
-const ringtoneSelect = document.getElementById('ringtone-select');
-const setAlarmBtn = document.getElementById('set-alarm-btn');
-const alarmStatus = document.getElementById('alarm-status');
+    function updateBackgroundColor(hex) {
+        const root = document.documentElement;
+        const rgb = hexToRgb(hex);
+        root.style.setProperty('--custom-bg', rgb);
+        document.body.style.backgroundColor = `rgb(${rgb})`;
+    }
+    
+    function toggleTheme() {
+        document.body.classList.toggle('day-mode');
+        const isDayMode = document.body.classList.contains('day-mode');
+        if (isDayMode) {
+            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden');
+            bgColorPicker.value = '#FFFFFF'; // Set picker value for light mode
+        } else {
+            moonIcon.classList.remove('hidden');
+            sunIcon.classList.add('hidden');
+            bgColorPicker.value = '#0a0a19'; // Set picker value for dark mode
+        }
+        // Reset background color to the theme's default on toggle
+        updateBackgroundColor(bgColorPicker.value); 
+    }
+    
+    // --- 5. AUDIO FUNCTIONS ---
+    
+    function playRingtone(ringtone) {
+        if (!soundEnabled) return;
+        
+        // Ensure Tone is started on user interaction
+        Tone.start();
 
-/**
- * Updates the world clock display based on selected timezone.
- */
-function updateWorldClock() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', {
-        timeZone: selectedTimezone,
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        const now = Tone.now();
+        switch (ringtone) {
+            case 'beep':
+                synth.triggerAttackRelease("C4", "8n", now);
+                synth.triggerAttackRelease("E4", "8n", now + 0.2);
+                synth.triggerAttackRelease("G4", "8n", now + 0.4);
+                break;
+            case 'chime':
+                chimeSynth.triggerAttackRelease(["C5", "G4"], "4n", now);
+                break;
+            case 'bell':
+                bellSynth.triggerAttackRelease("F4", "4n", now);
+                break;
+            case 'melody':
+                melodySynth.triggerAttackRelease("A4", "8n", now);
+                melodySynth.triggerAttackRelease("F4", "8n", now + 0.2);
+                melodySynth.triggerAttackRelease("D4", "4n", now + 0.4);
+                break;
+        }
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        const svg = soundToggle.querySelector('svg');
+        if (soundEnabled) {
+            svg.classList.add('text-green-400');
+            svg.classList.remove('text-red-400');
+            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 2L10 6H6a2 2 0 00-2 2v4a2 2 0 002 2h4l2 4V2z" />'; // Speaker on
+        } else {
+            svg.classList.remove('text-green-400');
+            svg.classList.add('text-red-400');
+            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 7.5L9.75 14.25M9.75 7.5l6.75 6.75M12 2L10 6H6a2 2 0 00-2 2v4a2 2 0 002 2h4l2 4V2z" />'; // Speaker off with cross
+        }
+    }
+    
+    // --- 6. WORLD CLOCK & ALARM FUNCTIONS ---
+    
+    function updateWorldTime() {
+        const timezone = timezoneSelect.value;
+        const now = new Date();
+        const options = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: timezone,
+            hour12: true
+        };
+        const timeString = now.toLocaleTimeString('en-US', options);
+        worldTimeDisplay.textContent = `${timezone.split('/')[1].replace('_', ' ')}: ${timeString}`;
+    }
+
+    function checkAlarm() {
+        if (!alarmTime) return;
+
+        const now = new Date();
+        const alarmDate = new Date();
+        
+        // Parse HH:MM from alarmTime (e.g., "14:30")
+        const [alarmHour, alarmMinute] = alarmTime.split(':').map(Number);
+        
+        alarmDate.setHours(alarmHour, alarmMinute, 0, 0);
+
+        // Check if the alarm time is within the current minute
+        if (
+            now.getHours() === alarmDate.getHours() &&
+            now.getMinutes() === alarmDate.getMinutes() &&
+            now.getSeconds() === 0 // Check precisely at the minute mark
+        ) {
+            handleAlarmTrigger();
+        }
+    }
+
+    function handleAlarmTrigger() {
+        const ringtone = ringtoneSelect.value;
+        playRingtone(ringtone);
+        alarmStatus.textContent = `🚨 Alarm Triggered at ${alarmTime}!`;
+        
+        // Optional: clear alarm after trigger
+        // alarmTime = null;
+        // alarmStatus.textContent = 'Alarm triggered and deactivated. Set a new one.';
+    }
+
+    function setAlarm() {
+        const timeValue = alarmTimeInput.value;
+        if (!timeValue) {
+            alarmStatus.textContent = 'Please set a valid time.';
+            return;
+        }
+
+        alarmTime = timeValue;
+        const now = new Date();
+        
+        // Check if the alarm time is in the past for today
+        const [alarmHour, alarmMinute] = timeValue.split(':').map(Number);
+        const alarmHourNow = now.getHours();
+        const alarmMinuteNow = now.getMinutes();
+
+        if (alarmHour < alarmHourNow || (alarmHour === alarmHourNow && alarmMinute <= alarmMinuteNow)) {
+            alarmStatus.textContent = `Alarm set for tomorrow at ${timeValue}.`;
+        } else {
+            alarmStatus.textContent = `Alarm set for today at ${timeValue}.`;
+        }
+    }
+
+
+    // --- 7. EVENT LISTENERS & INITIALIZATION ---
+
+    startPauseBtn.addEventListener('click', () => isRunning ? pauseTimer() : startTimer());
+    resetBtn.addEventListener('click', resetTimer);
+
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const mode = e.target.id.replace('-btn', '');
+            switchMode(mode);
+        });
     });
-    worldTimeDisplay.textContent = timeString;
-}
 
-/**
- * Checks if the current time matches the alarm time.
- */
-function checkAlarm() {
-    if (!alarmTime) return;
+    themeToggle.addEventListener('click', toggleTheme);
+    soundToggle.addEventListener('click', toggleSound);
 
-    const now = new Date();
-    const currentTime = now.toLocaleTimeString('en-US', {
-        timeZone: selectedTimezone,
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    // Color Pickers
+    colorPicker.addEventListener('input', (e) => updatePrimaryColor(e.target.value));
+    bgColorPicker.addEventListener('input', (e) => updateBackgroundColor(e.target.value));
 
-    if (currentTime === alarmTime) {
-        playRingtone(alarmRingtone);
-        alarmStatus.textContent = 'Alarm ringing!';
-        setTimeout(() => {
-            alarmStatus.textContent = '';
-        }, 5000);
-        // Clear alarm after ringing
-        clearAlarm();
-    }
-}
+    // World Clock & Alarm Listeners
+    timezoneSelect.addEventListener('change', updateWorldTime);
+    setAlarmBtn.addEventListener('click', setAlarm);
 
-/**
- * Sets the alarm based on user input.
- */
-function setAlarm() {
-    const timeValue = alarmTimeInput.value;
-    if (!timeValue) {
-        alarmStatus.textContent = 'Please select a time.';
-        return;
+
+    // Initial setup
+    function initialize() {
+        updateDisplay();
+        updateWorldTime(); // Initial world clock display
+        
+        // Main loop for world clock and alarm check (runs every second)
+        setInterval(() => {
+            updateWorldTime();
+            checkAlarm();
+        }, 1000);
+
+        // Initialize custom colors based on CSS defaults
+        updatePrimaryColor(colorPicker.value);
+        updateBackgroundColor(bgColorPicker.value);
+        
+        // Initialize sound toggle state
+        toggleSound(); 
+        toggleSound(); // Call twice to set correct icon initially
     }
 
-    alarmTime = timeValue;
-    alarmRingtone = ringtoneSelect.value;
-    alarmStatus.textContent = `Alarm set for ${alarmTime} with ${alarmRingtone} ringtone.`;
-
-    // Start checking alarm every second
-    if (alarmInterval) clearInterval(alarmInterval);
-    alarmInterval = setInterval(checkAlarm, 1000);
-}
-
-/**
- * Clears the current alarm.
- */
-function clearAlarm() {
-    alarmTime = null;
-    if (alarmInterval) {
-        clearInterval(alarmInterval);
-        alarmInterval = null;
-    }
-    alarmStatus.textContent = '';
-}
-
-// --- Event Listeners for World Clock and Alarm ---
-
-// Timezone Select
-timezoneSelect.addEventListener('change', (event) => {
-    selectedTimezone = event.target.value;
-    updateWorldClock();
+    initialize();
 });
-
-// Set Alarm Button
-setAlarmBtn.addEventListener('click', setAlarm);
-
-// --- Initialization ---
-window.onload = () => {
-    updateDisplay();
-    // Update colors on load based on default picker values
-    updatePrimaryColor(colorPicker.value);
-    updateBackgroundColor(bgColorPicker.value);
-
-    // Initialize world clock
-    updateWorldClock();
-    setInterval(updateWorldClock, 1000); // Update every second
-};
