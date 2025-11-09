@@ -11,20 +11,24 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
 
+        /* New Blue, White, Red, Lavender Theme */
+        /* --- DARK MODE (Default) --- */
         :root {
-            --primary-color: 79 70 229; /* indigo-600 RGB */
-            --bg-main: 17 24 39; /* gray-900 RGB */
-            --bg-card: 31 41 55; /* gray-800 RGB */
-            --text-main: 229 231 235; /* gray-200 RGB */
-            --text-secondary: 107 114 128; /* gray-400 RGB */
-            --custom-bg: 17 24 39; /* default background */
+            --primary-color: 0 102 204; /* Vibrant Blue */
+            --bg-main: 10 10 25; /* Very Dark Blue/Navy */
+            --bg-card: 20 20 50; /* Dark Lavender/Indigo */
+            --text-main: 240 240 255; /* Light Lavender/Off-White */
+            --text-secondary: 170 170 190; /* Medium Gray-Lavender */
+            --alert-color: 220 50 50; /* Red */
+            --custom-bg: 10 10 25;
         }
 
+        /* --- LIGHT MODE (.day-mode) --- */
         .day-mode {
-            --bg-main: 243 244 246; /* gray-100 RGB */
-            --bg-card: 255 255 255; /* white RGB */
-            --text-main: 17 24 39; /* gray-900 RGB */
-            --text-secondary: 75 85 99; /* gray-500 RGB */
+            --bg-main: 255 255 255; /* White */
+            --bg-card: 240 240 255; /* Light Lavender */
+            --text-main: 30 30 30; /* Dark Gray */
+            --text-secondary: 100 100 100; /* Medium Gray */
         }
 
         body {
@@ -36,15 +40,24 @@
         .timer-card {
             background-color: rgb(var(--bg-card));
             color: rgb(var(--text-main));
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transition: background-color 0.3s, color 0.3s;
+            /* Adjust shadow based on mode - using a light one that works okay in both */
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2); 
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(var(--primary-color), 0.1);
         }
+        
+        /* Adjust border colors based on theme */
+        .timer-card > div:first-child, .mt-10.border-t.pt-6 {
+            border-color: rgba(var(--text-secondary), 0.3);
+            transition: border-color 0.3s;
+        }
+
 
         .timer-display {
             font-weight: 900;
             line-height: 1;
             color: rgb(var(--primary-color));
-            text-shadow: 0 0 10px rgba(var(--primary-color), 0.5);
+            text-shadow: 0 0 8px rgba(var(--primary-color), 0.5);
         }
 
         .primary-btn {
@@ -54,17 +67,24 @@
         }
 
         .primary-btn:hover {
-            opacity: 0.9;
+            background-color: rgb(0, 82, 163); /* Slightly darker blue on hover */
+            opacity: 1;
+        }
+
+        .mode-btn {
+            color: rgb(var(--text-secondary));
+            border: 1px solid transparent;
         }
 
         .mode-btn.active {
             background-color: rgba(var(--primary-color), 0.2);
             border-color: rgb(var(--primary-color));
             color: rgb(var(--primary-color));
+            font-weight: 700;
         }
-
+        
         .progress-bar {
-            background-color: rgba(var(--primary-color), 0.2);
+            background-color: rgba(var(--primary-color), 0.1);
             height: 8px;
             border-radius: 4px;
             overflow: hidden;
@@ -76,6 +96,30 @@
             transition: width 1s ease;
         }
 
+        #status-message {
+            color: rgb(var(--alert-color)); /* Red for the status message */
+        }
+        
+        /* Input/Select fields styles */
+        #timezone-select, #alarm-time, #ringtone-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            /* Use text-main for text color */
+            color: rgb(var(--text-main)); 
+            border: 1px solid rgba(var(--text-secondary), 0.5);
+            transition: all 0.3s;
+        }
+
+        /* Dark Mode Input Colors */
+        :root #timezone-select, :root #alarm-time, :root #ringtone-select {
+            background-color: rgb(30, 30, 70); /* Darker background for inputs in dark mode */
+        }
+        
+        /* Light Mode Input Colors */
+        .day-mode #timezone-select, .day-mode #alarm-time, .day-mode #ringtone-select {
+            background-color: rgb(248, 248, 255); /* Very light lavender/off-white */
+        }
+
         .custom-bg-picker {
             background: none;
             border: none;
@@ -83,6 +127,22 @@
             border-radius: 50%;
             width: 32px;
             height: 32px;
+        }
+
+        /* Icon Colors */
+        #sound-toggle svg {
+             color: rgb(0, 200, 0); /* Green for sound */
+        }
+        #moon-icon, #sun-icon {
+            color: rgb(var(--primary-color)); 
+        }
+
+        #reset-btn {
+            background-color: rgb(var(--text-secondary));
+            color: rgb(var(--bg-card)); /* Contrast text color for reset button */
+        }
+        #reset-btn:hover {
+            background-color: rgb(120, 120, 140);
         }
     </style>
 </head>
@@ -95,29 +155,29 @@
             <h1 class="text-2xl font-bold">Pomodoro Timer</h1>
             <div class="flex items-center space-x-4">
                 
-                <button id="sound-toggle" class="p-2 rounded-full hover:bg-gray-700 transition duration-200" title="Toggle Sound">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <button id="sound-toggle" class="p-2 rounded-full hover:bg-gray-700/50 transition duration-200" title="Toggle Sound">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 2L10 6H6a2 2 0 00-2 2v4a2 2 0 002 2h4l2 4V2z" />
                     </svg>
                 </button>
 
-                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-700 transition duration-200" title="Toggle Day/Night Mode">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-700/50 transition duration-200" title="Toggle Day/Night Mode">
                     
-                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12 12 0 1020.354 15.354z" />
                     </svg>
                     
-                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                 </button>
 
                 <div class="relative">
-                    <input type="color" id="bg-color-picker" value="#111827" class="custom-bg-picker" title="Custom Background Color">
+                    <input type="color" id="bg-color-picker" value="#0a0a19" class="custom-bg-picker" title="Custom Background Color">
                 </div>
 
                 <div class="relative">
-                    <input type="color" id="color-picker" value="#4F46E5" class="w-8 h-8 rounded-full border-none cursor-pointer p-0 appearance-none" style="background: none; border: none; overflow: hidden; height: 32px;" title="Primary Accent Color">
+                    <input type="color" id="color-picker" value="#0066CC" class="w-8 h-8 rounded-full border-none cursor-pointer p-0 appearance-none" style="background: none; border: none; overflow: hidden; height: 32px;" title="Primary Accent Color">
                 </div>
             </div>
         </div>
@@ -134,26 +194,24 @@
 
         <div class="text-center mb-10">
             <p id="timer-display" class="timer-display text-8xl md:text-9xl">25:00</p>
-            <p id="status-message" class="text-xl mt-2 text-red-500 font-medium opacity-0 transition duration-300">Time's Up! Take a break.</p>
+            <p id="status-message" class="text-xl mt-2 font-medium opacity-0 transition duration-300">Time's Up! Take a break.</p>
         </div>
 
         <div class="flex justify-center space-x-4">
             <button id="start-pause-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">
                 Start
             </button>
-            <button id="reset-btn" class="px-8 py-3 text-lg font-bold rounded-xl bg-gray-600 hover:bg-gray-700 active:scale-[0.98] transition duration-200">
+            <button id="reset-btn" class="px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98] transition duration-200">
                 Reset
             </button>
         </div>
 
-        <!-- World Clock and Alarm Section -->
         <div class="mt-10 border-t pt-6 border-gray-700/50">
             <h2 class="text-xl font-bold mb-4">World Clock & Alarm</h2>
 
-            <!-- World Clock -->
             <div class="mb-6">
                 <label for="timezone-select" class="block text-sm font-medium mb-2">Select Timezone:</label>
-                <select id="timezone-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="timezone-select" class="w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="America/New_York">New York (EST)</option>
                     <option value="Europe/London">London (GMT)</option>
                     <option value="Asia/Tokyo">Tokyo (JST)</option>
@@ -164,12 +222,11 @@
                 <p class="mt-2 text-lg font-semibold" id="world-time">Loading...</p>
             </div>
 
-            <!-- Alarm -->
             <div class="mb-6">
                 <label for="alarm-time" class="block text-sm font-medium mb-2">Set Alarm Time (HH:MM):</label>
-                <input type="time" id="alarm-time" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="time" id="alarm-time" class="w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <label for="ringtone-select" class="block text-sm font-medium mb-2 mt-4">Select Ringtone:</label>
-                <select id="ringtone-select" class="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select id="ringtone-select" class="w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="beep">Beep</option>
                     <option value="chime">Chime</option>
                     <option value="bell">Bell</option>
