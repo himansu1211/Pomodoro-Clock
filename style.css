@@ -1,0 +1,201 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
+
+:root {
+    --primary-color: 255 215 0; /* Rolex Gold */
+    --bg-main: 10 25 49; /* Deep Navy Blue */
+    --bg-card: 15 35 64; /* Slightly lighter navy for cards */
+    --text-main: 0 0 0; /* Black */
+    --text-secondary: 100 100 100; /* Dark Gray */
+    --accent-gold: 255 215 0; /* Gold accent */
+    --border-color: 255 255 255; /* White borders */
+}
+
+.day-mode {
+    --bg-main: 248 248 248; /* Off-white */
+    --bg-card: 255 255 255; /* Pure white */
+    --text-main: 33 37 41; /* Dark gray */
+    --text-secondary: 108 117 125; /* Medium gray */
+    --border-color: 222 226 230; /* Light gray borders */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, rgb(var(--bg-main)) 0%, rgb(calc(var(--bg-main) - 10), calc(var(--bg-main) - 5), calc(var(--bg-main) + 10)) 100%);
+    color: rgb(var(--text-main));
+    min-height: 100vh;
+    transition: all 0.5s ease;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header Styling */
+header h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.3),
+        1px 1px 0px rgba(255, 255, 255, 0.1);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
+}
+
+/* Tab Navigation */
+.tab-btn {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgb(var(--text-main));
+    transition: all 0.3s ease;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.tab-btn.active {
+    background: rgba(var(--primary-color), 0.9);
+    color: rgb(var(--bg-main));
+    box-shadow: 0 4px 15px rgba(var(--primary-color), 0.4);
+}
+
+/* Content Card */
+.timer-card {
+    background: rgba(var(--bg-card), 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    color: rgb(var(--text-main));
+    transition: all 0.3s ease;
+}
+
+.timer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* Mode Buttons */
+.mode-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgb(var(--text-secondary));
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgb(var(--text-main));
+}
+
+.mode-btn.active {
+    background: rgba(var(--primary-color), 0.9);
+    color: rgb(var(--bg-main));
+    box-shadow: 0 4px 15px rgba(var(--primary-color), 0.4);
+}
+
+/* Timer Display */
+.timer-display {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: rgb(var(--primary-color));
+    text-shadow:
+        0 0 5px rgba(var(--primary-color), 0.8),
+        0 0 10px rgba(var(--primary-color), 0.6),
+        0 0 15px rgba(var(--primary-color), 0.4),
+        0 0 20px rgba(var(--primary-color), 0.3),
+        2px 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+
+/* Primary Buttons */
+.primary-btn {
+    background: linear-gradient(135deg, rgb(var(--primary-color)) 0%, rgb(calc(var(--primary-color) - 20), calc(var(--primary-color) - 20), 0) 100%);
+    color: rgb(var(--bg-main));
+    border: none;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 8px 25px rgba(var(--primary-color), 0.3);
+    transition: all 0.3s ease;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
+}
+
+/* Pause Button */
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+}
+
+#pause-btn:hover {
+    background: linear-gradient(135deg, rgb(185, 28, 28) 0%, rgb(153, 27, 27) 100%);
+    box-shadow: 0 12px 35px rgba(220, 38, 38, 0.5);
+}
+
+.primary-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(var(--primary-color), 0.5);
+}
+
+/* Progress Bar */
+.progress-bar {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, rgb(var(--primary-color)) 0%, rgb(calc(var(--primary-color) - 50), calc(var(--primary-color) - 50), 0) 100%);
+    box-shadow: 0 0 10px rgba(var(--primary-color), 0.5);
+}
+
+/* Form Elements */
+input, select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgb(var(--text-main));
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    border-color: rgb(var(--primary-color));
+    box-shadow: 0 0 15px rgba(var(--primary-color), 0.3);
+    outline: none;
+}
+
+/* Section Headings */
+h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .timer-display {
+        font-size: 4rem;
+    }
+
+    .timer-card {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}
+
+/* Animation for status messages */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.status-message {
+    animation: fadeIn 0.5s ease-out;
+}

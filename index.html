@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity App</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col items-center pt-16 p-4">
+
+    <!-- Header -->
+    <header class="w-full max-w-lg mb-6">
+        <h1 class="text-3xl font-bold text-center text-white">Productivity App</h1>
+        <div class="flex justify-center items-center space-x-4 mt-4">
+            <button id="sound-toggle" class="p-2 rounded-full hover:bg-white/10 transition duration-200 text-white" title="Toggle Sound">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 2L10 6H6a2 2 0 00-2 2v4a2 2 0 002 2h4l2 4V2z" />
+                </svg>
+            </button>
+            <button id="theme-toggle" class="p-2 rounded-full hover:bg-white/10 transition duration-200 text-white" title="Toggle Day/Night Mode">
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12 12 0 1020.354 15.354z" />
+                </svg>
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </button>
+            <input type="color" id="color-picker" value="#FFD700" class="w-8 h-8 rounded-full border-2 border-white/30 cursor-pointer" title="Primary Accent Color">
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="w-full max-w-lg mb-6">
+        <div class="flex justify-center space-x-2">
+            <button id="pomodoro-tab" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Pomodoro</button>
+            <button id="worldclock-tab" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">World Clock</button>
+            <button id="timer-tab" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Timer</button>
+            <button id="stopwatch-tab" class="tab-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Stopwatch</button>
+        </div>
+    </nav>
+
+    <!-- Content Card -->
+    <div class="timer-card w-full max-w-lg rounded-3xl p-6 sm:p-10">
+
+        <!-- Pomodoro Content -->
+        <div id="pomodoro-content" class="tab-content active">
+            <div class="flex justify-center space-x-3 mb-10">
+                <button id="pomodoro-btn" class="mode-btn active px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Pomodoro</button>
+                <button id="short-break-btn" class="mode-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Short Break</button>
+                <button id="long-break-btn" class="mode-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Long Break</button>
+            </div>
+            <div class="progress-bar mb-6">
+                <div id="progress-fill" class="progress-fill" style="width: 100%;"></div>
+            </div>
+            <div class="text-center mb-10">
+                <p id="timer-display" class="timer-display text-8xl md:text-9xl">25:00</p>
+                <p id="status-message" class="text-xl mt-2 font-medium opacity-0 transition duration-300">Time's Up! Take a break.</p>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button id="start-pause-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">Start</button>
+                <button id="pause-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">Pause</button>
+                <button id="reset-btn" class="px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98] transition duration-200">Reset</button>
+            </div>
+        </div>
+
+        <!-- World Clock Content -->
+        <div id="worldclock-content" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-6 text-center">World Clock</h2>
+            <div class="mb-6">
+                <label for="timezone-select" class="block text-sm font-medium mb-2">Select Timezone:</label>
+                <select id="timezone-select" class="w-full p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <!-- Options will be populated by JS -->
+                </select>
+                <p class="mt-4 text-4xl font-bold text-center" id="world-time-display">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Timer Content -->
+        <div id="timer-content" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-6 text-center">Countdown Timer</h2>
+            <div class="mb-6">
+                <label for="minutes-input" class="block text-sm font-medium mb-2">Minutes (0-999):</label>
+                <input type="number" id="minutes-input" min="0" max="999" class="w-full p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter minutes">
+            </div>
+            <div class="text-center mb-10">
+                <p id="countdown-display" class="timer-display text-8xl md:text-9xl">00:00</p>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button id="countdown-start-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">Start</button>
+                <button id="countdown-pause-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">Pause</button>
+                <button id="countdown-reset-btn" class="px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98] transition duration-200">Reset</button>
+            </div>
+        </div>
+
+        <!-- Stopwatch Content -->
+        <div id="stopwatch-content" class="tab-content hidden">
+            <h2 class="text-xl font-bold mb-6 text-center">Stopwatch</h2>
+            <div class="text-center mb-10">
+                <p id="stopwatch-display" class="timer-display text-8xl md:text-9xl">00:00.00</p>
+            </div>
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="stopwatch-start-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">Start</button>
+                <button id="stopwatch-pause-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">Pause</button>
+                <button id="stopwatch-reset-btn" class="px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98] transition duration-200">Reset</button>
+            </div>
+            <div class="flex justify-center">
+                <button id="stopwatch-lap-btn" class="px-6 py-2 text-sm font-bold rounded-lg active:scale-[0.98] transition duration-200">Lap</button>
+            </div>
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-2">Laps:</h3>
+                <ul id="laps-list" class="text-sm space-y-1 max-h-32 overflow-y-auto"></ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-lg mt-6 text-center text-sm opacity-70">
+        <p>Built with HTML, CSS & JavaScript</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/pomodoro.js"></script>
+    <script src="js/worldclock.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/stopwatch.js"></script>
+</body>
+</html>
