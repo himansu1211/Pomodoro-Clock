@@ -4,240 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pomodoro Clock</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
 
-        /* New Blue, White, Red, Lavender Theme */
-        /* --- DARK MODE (Default) --- */
         :root {
-            --primary-color: 0 102 204; /* Vibrant Blue */
-            --bg-main: 10 10 25; /* Very Dark Blue/Navy */
-            --bg-card: 20 20 50; /* Dark Lavender/Indigo */
-            --text-main: 240 240 255; /* Light Lavender/Off-White */
-            --text-secondary: 170 170 190; /* Medium Gray-Lavender */
-            --alert-color: 220 50 50; /* Red */
-            --custom-bg: 10 10 25;
+            --primary-color: 0 102 204;
+            --bg-main: 10 10 25;
+            --bg-card: 20 20 50;
+            --text-main: 240 240 255;
+            --text-secondary: 170 170 190;
+            --alert-color: 220 50 50;
         }
 
-        /* --- LIGHT MODE (.day-mode) --- */
         .day-mode {
-            --bg-main: 255 255 255; /* White */
-            --bg-card: 240 240 255; /* Light Lavender */
-            --text-main: 30 30 30; /* Dark Gray */
-            --text-secondary: 100 100 100; /* Medium Gray */
+            --bg-main: 255 255 255;
+            --bg-card: 240 240 255;
+            --text-main: 30 30 30;
+            --text-secondary: 100 100 100;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: rgb(var(--bg-main));
-            transition: background-color 0.3s;
+            background: rgb(var(--bg-main));
+            padding: 20px;
         }
 
         .timer-card {
-            background-color: rgb(var(--bg-card));
+            background: rgb(var(--bg-card));
             color: rgb(var(--text-main));
-            /* Adjust shadow based on mode - using a light one that works okay in both */
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2); 
-            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
-            border: 1px solid rgba(var(--primary-color), 0.1);
+            width: 420px; /* FIXED WIDTH ACROSS ALL DEVICES */
+            max-width: 100%;
+            margin: auto;
+            border-radius: 25px;
+            padding: 32px;
+            border: 1px solid rgba(var(--primary-color), 0.15);
         }
-        
-        /* Adjust border colors based on theme */
-        .timer-card > div:first-child, .mt-10.border-t.pt-6 {
-            border-color: rgba(var(--text-secondary), 0.3);
-            transition: border-color 0.3s;
-        }
-
 
         .timer-display {
+            font-size: 90px; /* UNIFIED FONT SIZE */
             font-weight: 900;
-            line-height: 1;
             color: rgb(var(--primary-color));
             text-shadow: 0 0 8px rgba(var(--primary-color), 0.5);
         }
 
-        .primary-btn {
-            background-color: rgb(var(--primary-color));
-            color: white;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .primary-btn:hover {
-            background-color: rgb(0, 82, 163); /* Slightly darker blue on hover */
-            opacity: 1;
-        }
-
-        .mode-btn {
-            color: rgb(var(--text-secondary));
-            border: 1px solid transparent;
-        }
-
         .mode-btn.active {
             background-color: rgba(var(--primary-color), 0.2);
-            border-color: rgb(var(--primary-color));
+            border: 1px solid rgb(var(--primary-color));
             color: rgb(var(--primary-color));
             font-weight: 700;
         }
-        
+
         .progress-bar {
-            background-color: rgba(var(--primary-color), 0.1);
             height: 8px;
+            background: rgba(var(--primary-color), 0.1);
             border-radius: 4px;
-            overflow: hidden;
         }
 
         .progress-fill {
-            background-color: rgb(var(--primary-color));
-            height: 100%;
-            transition: width 1s ease;
-        }
-
-        #status-message {
-            color: rgb(var(--alert-color)); /* Red for the status message */
-        }
-        
-        /* Input/Select fields styles */
-        #timezone-select, #alarm-time, #ringtone-select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            /* Use text-main for text color */
-            color: rgb(var(--text-main)); 
-            border: 1px solid rgba(var(--text-secondary), 0.5);
-            transition: all 0.3s;
-        }
-
-        /* Dark Mode Input Colors */
-        :root #timezone-select, :root #alarm-time, :root #ringtone-select {
-            background-color: rgb(30, 30, 70); /* Darker background for inputs in dark mode */
-        }
-        
-        /* Light Mode Input Colors */
-        .day-mode #timezone-select, .day-mode #alarm-time, .day-mode #ringtone-select {
-            background-color: rgb(248, 248, 255); /* Very light lavender/off-white */
-        }
-
-        .custom-bg-picker {
-            background: none;
-            border: none;
-            cursor: pointer;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-        }
-
-        /* Icon Colors */
-        #sound-toggle svg {
-             color: rgb(0, 200, 0); /* Green for sound */
-        }
-        #moon-icon, #sun-icon {
-            color: rgb(var(--primary-color)); 
-        }
-
-        #reset-btn {
-            background-color: rgb(var(--text-secondary));
-            color: rgb(var(--bg-card)); /* Contrast text color for reset button */
-        }
-        #reset-btn:hover {
-            background-color: rgb(120, 120, 140);
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col items-center pt-16 p-4">
-
-    <div class="timer-card w-full max-w-lg rounded-3xl p-6 sm:p-10">
-
-        
-        <div class="flex justify-between items-center mb-6 border-b pb-4 border-gray-700/50">
-            <h1 class="text-2xl font-bold">Pomodoro Timer</h1>
-            <div class="flex items-center space-x-4">
-                
-                <button id="sound-toggle" class="p-2 rounded-full hover:bg-gray-700/50 transition duration-200" title="Toggle Sound">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 2L10 6H6a2 2 0 00-2 2v4a2 2 0 002 2h4l2 4V2z" />
-                    </svg>
-                </button>
-
-                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-700/50 transition duration-200" title="Toggle Day/Night Mode">
-                    
-                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12 12 0 1020.354 15.354z" />
-                    </svg>
-                    
-                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </button>
-
-                <div class="relative">
-                    <input type="color" id="bg-color-picker" value="#0a0a19" class="custom-bg-picker" title="Custom Background Color">
-                </div>
-
-                <div class="relative">
-                    <input type="color" id="color-picker" value="#0066CC" class="w-8 h-8 rounded-full border-none cursor-pointer p-0 appearance-none" style="background: none; border: none; overflow: hidden; height: 32px;" title="Primary Accent Color">
-                </div>
-            </div>
-        </div>
-
-        <div class="flex justify-center space-x-3 mb-10">
-            <button id="pomodoro-btn" class="mode-btn active px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Pomodoro</button>
-            <button id="short-break-btn" class="mode-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Short Break</button>
-            <button id="long-break-btn" class="mode-btn px-4 py-2 text-sm font-semibold rounded-full border border-transparent transition duration-200">Long Break</button>
-        </div>
-
-        <div class="progress-bar mb-6">
-            <div id="progress-fill" class="progress-fill" style="width: 100%;"></div>
-        </div>
-
-        <div class="text-center mb-10">
-            <p id="timer-display" class="timer-display text-8xl md:text-9xl">25:00</p>
-            <p id="status-message" class="text-xl mt-2 font-medium opacity-0 transition duration-300">Time's Up! Take a break.</p>
-        </div>
-
-        <div class="flex justify-center space-x-4">
-            <button id="start-pause-btn" class="primary-btn px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98]">
-                Start
-            </button>
-            <button id="reset-btn" class="px-8 py-3 text-lg font-bold rounded-xl active:scale-[0.98] transition duration-200">
-                Reset
-            </button>
-        </div>
-
-        <div class="mt-10 border-t pt-6 border-gray-700/50">
-            <h2 class="text-xl font-bold mb-4">World Clock & Alarm</h2>
-
-            <div class="mb-6">
-                <label for="timezone-select" class="block text-sm font-medium mb-2">Select Timezone:</label>
-                <select id="timezone-select" class="w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="America/New_York">New York (EST)</option>
-                    <option value="Europe/London">London (GMT)</option>
-                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                    <option value="Australia/Sydney">Sydney (AEST)</option>
-                    <option value="Europe/Paris">Paris (CET)</option>
-                    <option value="Asia/Kolkata">India (IST)</option>
-                </select>
-                <p class="mt-2 text-lg font-semibold" id="world-time">Loading...</p>
-            </div>
-
-            <div class="mb-6">
-                <label for="alarm-time" class="block text-sm font-medium mb-2">Set Alarm Time (HH:MM):</label>
-                <input type="time" id="alarm-time" class="w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <label for="ringtone-select" class="block text-sm font-medium mb-2 mt-4">Select Ringtone:</label>
-                <select id="ringtone-select" class="w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="beep">Beep</option>
-                    <option value="chime">Chime</option>
-                    <option value="bell">Bell</option>
-                    <option value="melody">Melody</option>
-                </select>
-                <button id="set-alarm-btn" class="mt-4 primary-btn px-6 py-2 text-sm font-bold rounded-lg">Set Alarm</button>
-                <p id="alarm-status" class="mt-2 text-sm text-green-400"></p>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-</html>
+            height:
